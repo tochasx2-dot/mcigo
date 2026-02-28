@@ -1,1 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>McIgo Ordering System</title>
+<style>
+body { font-family: Arial,sans-serif; background:#fff5f5; margin:0; padding:0;}
+header { background:#d62828; color:yellow; text-align:center; padding:20px; font-size:28px; font-weight:bold; }
+.container { padding:20px; max-width:800px; margin:auto;}
+h2 { color:#d62828; text-align:center;}
+.card { background:white; padding:20px; margin:20px 0; border-radius:15px; box-shadow:0 5px 15px rgba(0,0,0,0.2);}
+.card img { width:100%; border-radius:10px; height:200px; object-fit:cover;}
+button { background:#d62828; color:white; padding:12px 20px; border:none; border-radius:10px; cursor:pointer; margin-top:10px; font-size:16px;}
+button:hover { background:#ffba08; color:#d62828;}
+input[type="number"] { padding:6px; width:100px;}
+select, input[type="text"] { padding:6px; margin:5px 0; width:100%;}
+label { display:block; margin:5px 0;}
+</style>
+</head>
+<body>
 
+<header>McIgo Ordering System</header>
+
+<div class="container">
+
+<h2>Order Your McIgo</h2>
+<div class="card">
+<h3>Burger</h3>
+<select id="burger">
+  <option>Burger</option>
+</select>
+
+<h3>Add Bacon?</h3>
+<label><input type="radio" name="bacon" value="Yes" checked> Yes</label>
+<label><input type="radio" name="bacon" value="No"> No</label>
+
+<h3>Extras</h3>
+<label><input type="checkbox" class="extra" value="Cheese"> Cheese</label>
+<label><input type="checkbox" class="extra" value="Lettuce"> Lettuce</label>
+<label><input type="checkbox" class="extra" value="Tomato"> Tomato</label>
+
+<h3>Meal</h3>
+<label><input type="radio" name="meal" value="Yes"> Yes (Fires + Drink)</label>
+<label><input type="radio" name="meal" value="No" checked> No</label>
+
+<h3>Tip (£)</h3>
+<input type="number" id="tip" value="0" min="0">
+
+<button onclick="buyOrder()">Buy</button>
+<p id="orderResult"></p>
+</div>
+
+<h2>Lookup Order</h2>
+<div class="card">
+<p>Enter Order Number:</p>
+<input type="number" id="lookupNumber">
+<button onclick="lookupOrder()">Check</button>
+<p id="lookupResult"></p>
+</div>
+
+<script>
+// Function to generate a static number for any combo string
+function getComboNumber(comboStr){
+    let hash = 0;
+    for(let i=0;i<comboStr.length;i++){
+        hash = ((hash<<5)-hash) + comboStr.charCodeAt(i);
+        hash = hash & hash;
+    }
+    return Math.abs(hash % 10000); // static number 0-9999
+}
+
+// Pre-generate all possible combos
+const burger = "Burger";
+const baconOptions = ["Yes","No"];
+const extrasOptions = ["Cheese","Lettuce","Tomato"];
+const mealOptions = ["Yes","No"];
+
+// Generate all extras combinations
+function getExtrasCombinations(arr){
+    let combos = [[]];
+    for(let i=0;i<arr.length;i++){
+        let newCombos = combos.map(c => c.concat([arr[i]]));
+        combos = combos.concat(newCombos);
+    }
+    return combos;
+}
+
+const extrasCombos = getExtrasCombinations(extrasOptions);
+
+// Map combos to order numbers and price
+let comboToNumber = {};
+let numberToCombo = {};
+extrasCombos.forEach(extras=>{
+    baconOptions.forEach(bacon=>{
+        mealOptions.forEach(meal=>{
+            const extrasStr = extras.length? extras.join(",") : "No Extras";
+            const comboStr = `${burger}|${bacon}|${extrasStr}|${meal}`;
+            const number = getComboNumber(comboStr);
+            comboToNumber[comboStr] = {number, price:5};
+            numberToCombo[number] = {burger, bacon, extras:extrasStr, meal, price:5};
+        });
+    });
+});
+
+// Buy order
+function buyOrder(){
+    const bacon = document.querySelector('input[name="bacon"]:checked').value;
+    const meal = document.querySelector('input[name="meal"]:checked').value;
+    const extrasArr = [];
+    document.querySelectorAll(".extra:checked").forEach(e=>extrasArr.push(e.value));
+    const extrasStr = extrasArr.length? extrasArr.join(",") : "No Extras";
+    const tip = parseFloat(document.getElementById("tip").value) || 0;
+
+    const comboStr = `${burger}|${bacon}|${extrasStr}|${meal}`;
+    const comboInfo = comboToNumber[comboStr];
+    if(!comboInfo){document.getElementById("orderResult").innerText="Combo not found!"; return;}
+
+    const totalPrice = comboInfo.price + tip;
+    document.getElementById("orderResult").innerText =
+        `Order Complete!\nOrder Number: ${comboInfo.number}\nBase Price: £${comboInfo.price}\nTip: £${tip}\nTotal: £${totalPrice}`;
+}
+
+// Lookup order
+function lookupOrder(){
+    const num = parseInt(document.getElementById("lookupNumber").value);
+    const comboInfo = numberToCombo[num];
+    if(comboInfo){
+        document.getElementById("lookupResult").innerText =
+            `Order #${num}\nBurger: ${comboInfo.burger}\nBacon: ${comboInfo.bacon}\nExtras: ${comboInfo.extras}\nMeal: ${comboInfo.meal}\nBase Price: £${comboInfo.price}`;
+    } else {
+        document.getElementById("lookupResult").innerText = "Order not found!";
+    }
+}
+</script>
+
+</body>
+</html>
