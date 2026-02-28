@@ -10,11 +10,9 @@ header { background:#d62828; color:yellow; text-align:center; padding:20px; font
 .container { padding:20px; max-width:800px; margin:auto;}
 h2 { color:#d62828; text-align:center;}
 .card { background:white; padding:20px; margin:20px 0; border-radius:15px; box-shadow:0 5px 15px rgba(0,0,0,0.2);}
-.card img { width:100%; border-radius:10px; height:200px; object-fit:cover;}
 button { background:#d62828; color:white; padding:12px 20px; border:none; border-radius:10px; cursor:pointer; margin-top:10px; font-size:16px;}
 button:hover { background:#ffba08; color:#d62828;}
 input[type="number"] { padding:6px; width:100px;}
-select, input[type="text"] { padding:6px; margin:5px 0; width:100%;}
 label { display:block; margin:5px 0;}
 </style>
 </head>
@@ -26,10 +24,9 @@ label { display:block; margin:5px 0;}
 
 <h2>Order Your McIgo</h2>
 <div class="card">
+
 <h3>Burger</h3>
-<select id="burger">
-  <option>Burger</option>
-</select>
+<p><strong>Burger</strong></p>
 
 <h3>Add Bacon?</h3>
 <label><input type="radio" name="bacon" value="Yes" checked> Yes</label>
@@ -38,7 +35,7 @@ label { display:block; margin:5px 0;}
 <h3>Extras</h3>
 <label><input type="checkbox" class="extra" value="Cheese"> Cheese</label>
 <label><input type="checkbox" class="extra" value="Lettuce"> Lettuce</label>
-<label><input type="checkbox" class="extra" value="Tomato"> Tomato</label>
+<label><input type="checkbox" class="extra" value="Egg"> Egg</label>
 
 <h3>Meal</h3>
 <label><input type="radio" name="meal" value="Yes"> Yes (Fires + Drink)</label>
@@ -60,20 +57,19 @@ label { display:block; margin:5px 0;}
 </div>
 
 <script>
-// Function to generate a static number for any combo string
+// Static hash generator (same combo = same number forever)
 function getComboNumber(comboStr){
     let hash = 0;
     for(let i=0;i<comboStr.length;i++){
         hash = ((hash<<5)-hash) + comboStr.charCodeAt(i);
         hash = hash & hash;
     }
-    return Math.abs(hash % 10000); // static number 0-9999
+    return Math.abs(hash % 10000);
 }
 
-// Pre-generate all possible combos
 const burger = "Burger";
 const baconOptions = ["Yes","No"];
-const extrasOptions = ["Cheese","Lettuce","Tomato"];
+const extrasOptions = ["Cheese","Lettuce","Egg"];
 const mealOptions = ["Yes","No"];
 
 // Generate all extras combinations
@@ -88,9 +84,9 @@ function getExtrasCombinations(arr){
 
 const extrasCombos = getExtrasCombinations(extrasOptions);
 
-// Map combos to order numbers and price
 let comboToNumber = {};
 let numberToCombo = {};
+
 extrasCombos.forEach(extras=>{
     baconOptions.forEach(bacon=>{
         mealOptions.forEach(meal=>{
@@ -103,7 +99,7 @@ extrasCombos.forEach(extras=>{
     });
 });
 
-// Buy order
+// Buy
 function buyOrder(){
     const bacon = document.querySelector('input[name="bacon"]:checked').value;
     const meal = document.querySelector('input[name="meal"]:checked').value;
@@ -114,20 +110,29 @@ function buyOrder(){
 
     const comboStr = `${burger}|${bacon}|${extrasStr}|${meal}`;
     const comboInfo = comboToNumber[comboStr];
-    if(!comboInfo){document.getElementById("orderResult").innerText="Combo not found!"; return;}
 
     const totalPrice = comboInfo.price + tip;
+
     document.getElementById("orderResult").innerText =
-        `Order Complete!\nOrder Number: ${comboInfo.number}\nBase Price: £${comboInfo.price}\nTip: £${tip}\nTotal: £${totalPrice}`;
+        `Order Complete!
+Order Number: ${comboInfo.number}
+Base Price: £${comboInfo.price}
+Tip: £${tip}
+Total: £${totalPrice}`;
 }
 
-// Lookup order
+// Lookup
 function lookupOrder(){
     const num = parseInt(document.getElementById("lookupNumber").value);
     const comboInfo = numberToCombo[num];
     if(comboInfo){
         document.getElementById("lookupResult").innerText =
-            `Order #${num}\nBurger: ${comboInfo.burger}\nBacon: ${comboInfo.bacon}\nExtras: ${comboInfo.extras}\nMeal: ${comboInfo.meal}\nBase Price: £${comboInfo.price}`;
+            `Order #${num}
+Burger: ${comboInfo.burger}
+Bacon: ${comboInfo.bacon}
+Extras: ${comboInfo.extras}
+Meal: ${comboInfo.meal}
+Base Price: £${comboInfo.price}`;
     } else {
         document.getElementById("lookupResult").innerText = "Order not found!";
     }
